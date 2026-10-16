@@ -29,7 +29,7 @@ Establish two things:
 
 - **What's under review** — the current build, a named component, or the branch's UI changes. Bound it.
 - **What it's trying to be** — read `.webik/design.md` if it exists, and infer the intended user, task, and feel. *You review against the design's own intent, not a generic ideal.* A deliberately dense price list is not failing for being dense. If intent is genuinely unknowable, say so and review against general craft — but note the assumption.
-- **What it must match** — in a webik project, `.webik/state.json` → `design_artifact_url` is the design the team approved in Claude Design. Read it with the `Artifact` tool (`action: "read"`) and treat divergence of the build from its artboards (desktop 1440, mobile 390) as a finding. Load the `webik` skill and use `references/design-craft.md` (including "Признаки AI-шаблона") as the craft bar for websites.
+- **What it must match** — in a webik project, `.webik/state.json` → `design_artifact_url` is the design the team approved in Claude Design. Read it with the `Artifact` tool (`action: "read"`) and treat divergence of the build from its artboards (desktop 1440, mobile 390) as a finding. Load the `webik` skill and use `references/design-craft.md` and `references/anti-ai.md` (every banned AI tell is a Blocker) as the craft bar; run `scripts/check-ai-tells.sh src` and report each hit as a finding.
 
 ## Step 2 — See the whole first
 
