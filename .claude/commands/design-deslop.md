@@ -35,7 +35,7 @@ Now read what the branch changed and fix the concrete tells. Stay in the diff; t
 
 **Tokens & color** — generic names (`--gray-700`, `--surface-2`, inline hex) → semantic names mapped to primitives · competing accents → one · decorative gradients/tints → remove or make them mean status/action · different hues per surface → one hue, shift lightness.
 
-**Typography** — system/Inter default where a direction exists → the chosen face · size-only hierarchy → add weight + color · slack tracking on large headings → tighten · updating numbers proportional → `tabular-nums`.
+**Typography** — system/Inter default where a direction exists → the chosen face · a monospace face (JetBrains Mono, Space Mono, IBM Plex Mono, Fira Code…) on headings, body, nav or buttons of a site that isn't about code → a face that fits the client's world, per `references/design-craft.md` → «Выбор шрифта» · size-only hierarchy → add weight + color · slack tracking on large headings → tighten · updating numbers proportional → `tabular-nums`.
 
 **Surfaces & depth** — harsh 1px solid borders → low-opacity rgba or a shadow · dramatic elevation jumps → a few percent lightness per step · sidebar a different color → same canvas + subtle border · mixed depth strategies → pick one · same radius on nested parent/child → concentric (`outer = inner + padding`).
 
