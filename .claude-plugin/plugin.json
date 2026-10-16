@@ -1,7 +1,7 @@
 {
   "name": "webik",
   "description": "Реконструкция сайтов: аудит старого сайта по ссылке, макет в Claude Design, сборка готового сайта на Astro + Tailwind с SEO и деплой на демо-сервер.",
-  "version": "2026.10.17.0205",
+  "version": "2026.10.17.0210",
   "author": {
     "name": "d0vbnyak"
   },

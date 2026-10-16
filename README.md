@@ -40,11 +40,15 @@
 ### Через marketplace Claude Code
 
 ```bash
-/plugin marketplace add <путь к папке репозитория или owner/repo на GitHub>
+/plugin marketplace add d0vbnyak/webik-plugin
 /plugin install webik@webik
 ```
 
-Перезапустите Claude Code. Команды будут доступны как `/webik:audit`, `/webik:design` и т. д. В Claude Code 2.1.275 и новее можно одной строкой: `/plugin install webik --marketplace <owner/repo>`.
+Перезапустите Claude Code. Команды будут доступны как `/webik:audit`, `/webik:design` и т. д. В Claude Code 2.1.275 и новее можно одной строкой: `/plugin install webik --marketplace d0vbnyak/webik-plugin`.
+
+Репозиторий приватный: у сотрудника должен быть доступ к нему на GitHub (`gh auth login` или git-учётка).
+
+Обновление у сотрудников: `/plugin marketplace update webik`. Новая версия подхватывается, только если в манифесте изменилось поле `version`; хук `.githooks/pre-commit` меняет его при каждом коммите. Включается один раз в клоне репозитория: `git config core.hooksPath .githooks`.
 
 ### Что нужно на машине сотрудника
 
