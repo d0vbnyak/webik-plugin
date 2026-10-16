@@ -1,0 +1,23 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "webik",
+  "metadata": {
+    "description": "Внутренний плагин студии реконструкции сайтов."
+  },
+  "owner": {
+    "name": "d0vbnyak"
+  },
+  "plugins": [
+    {
+      "name": "webik",
+      "description": "Реконструкция сайтов: аудит старого сайта по ссылке, макет в Claude Design, сборка готового сайта на Astro + Tailwind с SEO и деплой на демо-сервер.",
+      "version": "2026.10.17.0205",
+      "author": {
+        "name": "d0vbnyak"
+      },
+      "source": "./",
+      "category": "design",
+      "tags": ["website", "redesign", "astro", "tailwind", "seo", "claude-design"]
+    }
+  ]
+}

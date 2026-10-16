@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Auto-update version on every commit
+# Uses timestamp format: YYYY.MM.DD.HHMM
+# This ensures plugin cache refreshes on every update
+
+VERSION=$(date +"%Y.%-m.%-d.%H%M")
+
+# -i.bak works with both GNU sed (Linux, Git Bash) and BSD sed (macOS)
+for f in .claude-plugin/plugin.json .claude-plugin/marketplace.json; do
+  sed -i.bak "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" "$f" && rm -f "$f.bak"
+done
+
+# Stage the updated files
+git add .claude-plugin/plugin.json .claude-plugin/marketplace.json
+
+echo "Version updated to $VERSION"

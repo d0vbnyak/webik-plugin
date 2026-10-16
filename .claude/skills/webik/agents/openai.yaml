@@ -1,0 +1,6 @@
+interface:
+  display_name: "Webik"
+  short_description: "Реконструкция сайтов: аудит, макет, сборка на Astro"
+  default_prompt: "Use $webik to audit an existing website by URL and rebuild it on Astro + Tailwind."
+policy:
+  allow_implicit_invocation: true
