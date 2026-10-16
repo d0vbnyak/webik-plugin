@@ -11,6 +11,8 @@ Be ambitious. Don't stop at "this border is a little strong." Look for the decis
 
 This review **judges by default**. Report findings and a verdict; only rebuild when the user asks. Keep the review and the mutation cleanly separate.
 
+Reviewing needs no Context7. **Fixing does:** if the user asks you to apply findings, first load the `webik` skill and run the check in `SKILL.md` → «Context7 — обязательное условие для кода». If Context7 is unavailable, stop and tell the user how to connect it — do not edit any code.
+
 ## The Gap: Correct vs Crafted
 
 There's a distance between correct and crafted. Correct means the layout holds and nothing clashes. Crafted means someone cared about every decision down to the last pixel — the way you tell a hand-thrown mug from an injection-molded one. Both hold coffee; one has presence. Generated output lives in *correct*. Your job is to find every place it defaulted instead of decided, weigh how much each one costs, and name the crafted version.

@@ -9,6 +9,8 @@ Every generated interface carries tells — the specific signatures that make so
 
 The tell is rarely a single wrong value. It's the *sum* — every number the same size, every card identical, one accent color smeared everywhere, structure built from borders instead of space. Slop is compositional. So you can't catch it by reading CSS line by line; you have to **look at the rendered thing first**, then go fix the lines.
 
+**Context7 gate.** This pass edits site code. Before the first edit, load the `webik` skill and run the check in `SKILL.md` → «Context7 — обязательное условие для кода». If Context7 is unavailable, stop and tell the user how to connect it — do not edit any code. Verify any Astro/Tailwind API you touch against Context7 docs.
+
 ## How to run it
 
 Two passes, in this order. The first catches the slop that does the most damage and is invisible in a diff. The second catches the concrete line-level tells.
