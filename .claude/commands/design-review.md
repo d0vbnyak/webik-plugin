@@ -46,33 +46,33 @@ The worst slop is compositional — absent decisions that live in the whole, inv
 
 Review through each lens **independently** — one concern at a time, so findings don't blur together. For each, the test is "did they decide, or default?"
 
-**Lens A · Hierarchy** — the highest-value lens.
+**Lens A: Hierarchy** — the highest-value lens.
 - Name the focal element. Does it actually win (size, weight, contrast, isolation), or sit equal to its neighbors?
 - Is the rest *demoted* — secondary actions ghosted, metadata muted? Promotion without demotion isn't hierarchy.
 - Can you tell primary / secondary / metadata tiers apart without reading the words?
 
-**Lens B · Typography & color**
+**Lens B: Typography & color**
 - Hierarchy from size + weight + color together, or size alone (the weak default)?
 - A real type scale (a ratio), or arbitrary near-equal sizes? Tightened tracking on large headings, or default (reads as a document)?
 - A four-step text-color ramp, or just "text" and "gray text"? Updating numbers in `tabular-nums`?
 - One intentional accent (~60/30/10, accent ≤ ~10%), or several competing? Does color *mean* something (status/action/identity) or decorate?
 - One hue across surfaces shifting only lightness, or different hues fragmenting the space? Does the palette feel like it came from the product's world?
 
-**Lens C · Surfaces & depth**
+**Lens C: Surfaces & depth**
 - Elevation steps whisper-quiet (a few percent), or dramatic jumps? Borders low-opacity and findable-not-loud, or harsh 1px solid gray?
 - One depth strategy committed, or mixed (borders + heavy shadows ad hoc)? Sidebar same-canvas + border, or a different-colored "sidebar world"?
 - Nested radii concentric (`outer = inner + padding`)? Squint with borders mentally removed — is structure still perceptible through surface alone?
 
-**Lens D · Composition & rhythm**
+**Lens D: Composition & rhythm**
 - Does the layout breathe unevenly (dense zones giving way to open), or is it monotone — same card size, gap, density everywhere?
 - Do proportions state a relationship (280px vs 360px sidebar say different things)? Can you articulate what they say? Is content width considered, or full-bleed and unconsidered?
 
-**Lens E · States, polish & motion**
+**Lens E: States, polish & motion**
 - Every interactive element: default, hover, active, focus, disabled? Data: loading, empty, error? Missing states are the fastest tell of unfinished work.
 - Hit areas 44×44px (WCAG, 40 min)? Optical alignment on icons/buttons? Font smoothing on root? `text-wrap: balance` on headings?
 - Anything animating that shouldn't (keyboard-repeated actions)? UI durations < 300ms, custom ease-out (never `ease-in`)? Press feedback (`scale(0.97)`)? Origin-aware popovers? Only `transform`/`opacity` animated, never `transition: all`?
 
-**Lens F · Structure, reuse & content**
+**Lens F: Structure, reuse & content**
 - **Reinvention.** Did they hand-roll what the project (or the platform) already provides? A `<div onClick>` instead of `<button>`/`<a>`; a from-scratch dropdown/select/modal/tooltip instead of a headless accessible primitive or the project's existing component; a one-off className string instead of the shipped `Button`/variant; the same long utility string duplicated instead of a component; hardcoded literals (`bg-white`, `border-gray-200`) instead of semantic tokens. A hand-rolled interactive control missing keyboard nav, focus management, or ARIA is the worst case — it's broken, not just inconsistent.
 - **Structural hacks.** Open the CSS and find the lies: negative margins undoing parent padding, escape-hatch `calc()`, absolute positioning to dodge layout flow. Each is a shortcut where a clean solution exists — the correct answer is simpler than the hack.
 - **Content.** Read every visible string as a user would — not for typos, for truth. Does the screen tell one coherent story, or do the title, body, and metrics belong to three different products? Content incoherence breaks the illusion faster than any visual flaw.
@@ -126,7 +126,7 @@ Do not approve because it renders and aligns. To pass:
 - no structural hacks; coherent content
 - would not be mistaken for generic AI output
 
-**Presumptive blockers** (unless the author justifies them against intent): no focal point · size-only or defaulted typography · monotone layout · timid or competing-accent palette · harsh or fragmented surfaces · missing states · structural hacks · an inaccessible hand-rolled control (no keyboard/focus/ARIA) where a primitive or existing component should be used. Any one present → **not approved**; leave explicit, actionable feedback and push for the crafted version.
+**Presumptive blockers** (unless the author justifies them against intent): no focal point; size-only or defaulted typography; monotone layout; timid or competing-accent palette; harsh or fragmented surfaces; missing states; structural hacks; an inaccessible hand-rolled control (no keyboard/focus/ARIA) where a primitive or existing component should be used. Any one present → **not approved**; leave explicit, actionable feedback and push for the crafted version.
 
 ---
 
