@@ -54,17 +54,30 @@
 
 ### Что нужно на машине сотрудника
 
-- **Node.js** LTS (для Astro);
+- **Node.js** LTS (для Astro). Если его нет, Claude предложит поставить: `winget install --id OpenJS.NodeJS.LTS -e`;
 - **Google Chrome** — для замеров Lighthouse на странице «было / стало» (скриншоты делает Playwright, он ставится сам). Контакты студии для подвала этой страницы — блок `studio` в `~/.webik/config.json`, см. `references/compare.md`;
 - `ssh` и `scp` с ключом к демо-серверу (в Windows 10/11 есть встроенный OpenSSH);
 - Git Bash в Windows (скрипт выкладки написан на bash);
 - вход в claude.ai в Claude Code: без него недоступен артефакт Claude Design;
 - **Context7** — подключается вместе с плагином (`.mcp.json`), отдельно ставить не нужно. Проверка: `/mcp` → `context7` в статусе connected. Если сервер не подключился: `claude mcp add --transport http context7 https://mcp.context7.com/mcp`. Без ключа лимиты запросов ниже; бесплатный ключ берётся на context7.com;
-- конфиг демо-сервера `~/.webik/config.json` — см. [docs/demo-server.md](docs/demo-server.md#5-конфиг-на-машине-сотрудника).
+- конфиг демо-сервера `~/.webik/config.json` — пример в `references/deploy.md` скилла, раздел «Конфиг демо-сервера»;
+- доступ к исходникам webik.tech (`gh auth login` с доступом к приватному репозиторию `d0vbnyak/webik`) — из них переносятся возможности для сайтов клиентов.
 
 ### Демо-сервер
 
-Однократная настройка (DNS, пользователь, wildcard-сертификат, nginx) — в [docs/demo-server.md](docs/demo-server.md).
+Как устроен сейчас (Caddy в Docker на сервере sakhuslugi) и как поднять отдельный — в [docs/demo-server.md](docs/demo-server.md).
+
+### Права в Claude Code
+
+В режиме auto защита Claude Code блокирует запись на удалённые серверы и правку общих файлов, поэтому первая выкладка на демо может остановиться с просьбой о разрешении. Варианты:
+
+- на время `/webik:demo` переключить режим разрешений на «спрашивать» и подтвердить команды выкладки;
+- или добавить правило в `~/.claude/settings.json`:
+  ```json
+  { "permissions": { "allow": ["Bash(ssh root@72.56.237.147:*)", "Bash(scp:*)"] } }
+  ```
+
+Правило для `root` на боевом сервере sakhuslugi — очень широкое. Надёжнее завести на сервере отдельного пользователя для выкладки демо с доступом только к папке демо, Caddyfile и `docker exec` для Caddy, и разрешать только его.
 
 ## Проект клиента
 
