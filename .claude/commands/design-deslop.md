@@ -5,7 +5,7 @@ description: Strip the signatures that make a UI look AI-generated — flat hier
 
 # Remove design slop
 
-**Language: always write to the user in Russian** — findings, tables, verdicts, questions and summaries. Keep code, file names, CSS/Tailwind identifiers and commands as they are.
+**Language: always write to the user in Russian** — including short progress updates between tool calls, findings, tables, verdicts, questions and summaries. Keep code, file names, CSS/Tailwind identifiers and commands as they are.
 
 Every generated interface carries tells — the specific signatures that make someone glance at it and think *an AI made this*. This pass finds those tells and removes them. Fast, surgical, behavior-preserving. Not a full design review (that's `/webik:design-review`, which judges craft against an approval bar and can block). Here you have one job: **make it stop looking generated.**
 
@@ -33,7 +33,7 @@ If the screen survives the squint — one thing leads, tiers are legible, it bre
 
 Now read what the branch changed and fix the concrete tells. Stay in the diff; these are the line-level signatures, grouped so you can move fast:
 
-**Website template tells** (full list with replacements: `references/anti-ai.md` in the `webik` skill — apply all of it; also run `bash "<skill dir>/scripts/check-ai-tells.sh" src` and fix every hit) — decorative gradient/glass hero → the client's real photo or a brand-driven composition; three identical icon cards as the answer to every section → vary the composition per content; generic "why choose us" with abstract virtues → concrete facts from the old site; invented numbers, reviews, partner logos → remove or replace with a visible `[НУЖНО ОТ КЛИЕНТА: …]` placeholder; every section on the same background with the same padding → section rhythm from the spacing scale; two equally loud CTAs → one primary per screen; middot/bullet/pipe separators between words in copy ("Ремонт · Отделка · Дизайн") → a comma-separated phrase, a real list, or a CSS-drawn divider; staccato period fragments ("Быстро. Надёжно. Честно.") → one full sentence. Rules: `references/seo.md` → «Пунктуация и разделители».
+**Website template tells** (full list with replacements: `references/anti-ai.md` in the `webik` skill — apply all of it; also run `bash "<skill dir>/scripts/check-ai-tells.sh" src` and fix every hit) — decorative gradient/glass hero → the client's real photo or a brand-driven composition; three identical icon cards as the answer to every section → vary the composition per content; generic "why choose us" with abstract virtues → concrete facts from the old site; invented numbers, reviews, partner logos → remove or replace with a visible `[НУЖНО ОТ ВАС: …]` placeholder; every section on the same background with the same padding → section rhythm from the spacing scale; two equally loud CTAs → one primary per screen; middot/bullet/pipe separators between words in copy ("Ремонт · Отделка · Дизайн") → a comma-separated phrase, a real list, or a CSS-drawn divider; staccato period fragments ("Быстро. Надёжно. Честно.") → one full sentence. Rules: `references/seo.md` → «Пунктуация и разделители».
 
 **Tokens & color** — generic names (`--gray-700`, `--surface-2`, inline hex) → semantic names mapped to primitives; competing accents → one; decorative gradients/tints → remove or make them mean status/action; different hues per surface → one hue, shift lightness.
 

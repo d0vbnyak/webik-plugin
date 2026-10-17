@@ -103,6 +103,30 @@ Tailwind v4, настройка в CSS:
 }
 ```
 
+### Шкала типографики
+
+Размеры шрифта тоже задаются токенами, по одному на ступень шкалы из `design.md`. Крупные ступени адаптивные через `clamp()`, поэтому не нужны пары `text-x md:text-y`:
+
+```css
+@theme {
+  --text-display: clamp(2.75rem, 1.6rem + 4.2vw, 4.5rem);
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: -0.02em;
+  --text-h1: clamp(2.125rem, 1.5rem + 2.6vw, 3rem);
+  --text-h1--line-height: 1.1;
+  --text-h2: clamp(1.625rem, 1.25rem + 1.6vw, 2.25rem);
+  --text-h2--line-height: 1.15;
+  --text-h3: 1.375rem;
+  --text-h3--line-height: 1.25;
+  --text-body: 1.0625rem;
+  --text-body--line-height: 1.6;
+  --text-small: 0.875rem;
+  --text-small--line-height: 1.45;
+}
+```
+
+В разметке — только `text-display`, `text-h1`, `text-h2`… Секции одного ранга получают одну и ту же ступень. Произвольные `text-[1.375rem]` и пары вроде `text-2xl md:text-[2.1rem]` запрещены (их ловит `check-ai-tells.sh`). Синтаксис `@theme` сверяй через Context7.
+
 Имена токенов — по смыслу и миру клиента (`ink`, `paper`, `brick`), а не `gray-700`. В разметке используй только токены (`text-ink-soft`, `bg-paper`), без сырых `text-gray-500` и `#hex`. Длинная повторяющаяся строка классов означает, что нужен компонент.
 
 ## Компоненты и интерактив

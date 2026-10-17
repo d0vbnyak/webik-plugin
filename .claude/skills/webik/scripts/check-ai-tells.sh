@@ -12,6 +12,7 @@ DIR="${1:-src}"
 TEXT=(--include=*.astro --include=*.md --include=*.mdx --include=*.html)
 CODE=("${TEXT[@]}" --include=*.ts --include=*.js --include=*.mjs --include=*.jsx --include=*.tsx --include=*.css)
 STYLE=(--include=*.css --include=*.astro --include=*.ts --include=*.mjs --include=*.js --include=*.json)
+MD=(--include=*.md --include=*.mdx)
 
 found=0
 
@@ -36,6 +37,9 @@ check "восклицание" '\p{Ll}!(\s|<|$)' TEXT
 check "штамп" '(?i)команда (опытных )?профессионалов|индивидуальн\w* подход|широк\w* спектр|полн\w* комплекс услуг|динамично развива|надёжн\w* партн[её]р|надежн\w* партн[её]р|проверенн\w* временем|соотношени\w* цены и качества|в кратчайшие сроки|быстро и качественно|добро пожаловать|наш приоритет|откройте для себя|погрузитесь в|раскройте потенциал|новый уровень|инновационн\w* решени|почему выбирают нас|наша миссия|не просто \p{L}+\s*[—–-]' TEXT
 check "общий-призыв" '>\s*(Подробнее|Узнать больше|Начать|Отправить|Learn more|Read more|Get started)\s*<' TEXT
 check "выдумка-заглушка" '(?i)lorem ipsum|example\.(com|ru|org)|000-00-00|\+7\s?\(999\)' TEXT
+check "формат-цены" '\d{1,3}[.,]\d{3}(\s|&nbsp;)*(руб|р\.)|\d(\s|&nbsp;)*руб\.?(\s|<|$|,)' TEXT
+check "дефис-вместо-тире" '>[^<{}]*[\p{L}\d] - [\p{L}\d][^<{}]*<' TEXT
+check "дефис-вместо-тире" '^[^-|`#][^`]*[\p{L}\d] - [\p{L}\d]' MD
 
 # Шрифты
 check "шрифт" '(?i)jetbrains|space mono|plex mono|fira code|roboto mono|geist mono|source code pro|ubuntu mono|\bInter\b|montserrat|open sans' STYLE
@@ -44,7 +48,7 @@ check "шрифт" '(?i)jetbrains|space mono|plex mono|fira code|roboto mono|gei
 check "градиент-стекло" 'bg-gradient-to-|bg-linear-to-|bg-clip-text|backdrop-blur|linear-gradient\(' CODE
 check "анимация-украшение" 'hover:scale-1\d\d|animate-(bounce|pulse|ping)' CODE
 check "transition-all" 'transition-all|transition:\s*all' CODE
-check "произвольное-значение" '-\[\d+(\.\d+)?px\]|-\[#[0-9a-fA-F]{3,8}\]' CODE
+check "произвольное-значение" '-\[\d*\.?\d+(px|rem|em)\]|-\[#[0-9a-fA-F]{3,8}\]' CODE
 check "пустая-ссылка" 'href="#"' CODE
 check "console.log" 'console\.log' CODE
 
