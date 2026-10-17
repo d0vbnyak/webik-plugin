@@ -56,7 +56,7 @@
 
 ## 8. Подготовка к выкладке
 
-Создай в корне проекта `DEPLOY.md` по `references/deploy.md` → «Прод». Обнови `state.json`: `stage: "built"`.
+Создай в корне проекта `DEPLOY.md` по `references/deploy.md` → «Прод». Запиши `.webik/compare/fixed.md` по `references/compare.md` → «Список исправленного». Обнови `state.json`: `stage: "built"`.
 
 ## 9. Отчёт
 
