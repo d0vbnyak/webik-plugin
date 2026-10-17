@@ -5,6 +5,8 @@ description: Strict, multi-pass craft and visual-hierarchy review of a UI build,
 
 # Design Review
 
+**Language: always write to the user in Russian** — findings, tables, verdicts, questions and summaries. Keep code, file names, CSS/Tailwind identifiers and commands as they are.
+
 An unusually strict review focused on visual craft and hierarchy. The bar is not "does this work" or "does the grid align" — it is **"would a design lead at a top web studio put their name on this?"** Most generated UI is *correct* (it renders, it aligns, colors don't clash) and *not crafted* (nothing was decided, the hierarchy is flat, it looks like every other app). This review pulls a build from correct toward crafted, scores what's wrong by how much it matters, and blocks what isn't there yet.
 
 Be ambitious. Don't stop at "this border is a little strong." Look for the decisions that were never made — the defaulted typeface, the absent focal point, the monotone layout — and push for the version that looks designed.

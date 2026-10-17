@@ -5,6 +5,8 @@ description: Strip the signatures that make a UI look AI-generated — flat hier
 
 # Remove design slop
 
+**Language: always write to the user in Russian** — findings, tables, verdicts, questions and summaries. Keep code, file names, CSS/Tailwind identifiers and commands as they are.
+
 Every generated interface carries tells — the specific signatures that make someone glance at it and think *an AI made this*. This pass finds those tells and removes them. Fast, surgical, behavior-preserving. Not a full design review (that's `/webik:design-review`, which judges craft against an approval bar and can block). Here you have one job: **make it stop looking generated.**
 
 The tell is rarely a single wrong value. It's the *sum* — every number the same size, every card identical, one accent color smeared everywhere, structure built from borders instead of space. Slop is compositional. So you can't catch it by reading CSS line by line; you have to **look at the rendered thing first**, then go fix the lines.
