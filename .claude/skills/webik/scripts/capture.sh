@@ -8,8 +8,8 @@ set -euo pipefail
 URL="${1:-}"
 OUT="${2:-}"
 RUNS="${WEBIK_LH_RUNS:-3}"
-PLAYWRIGHT="playwright@1.55.0"
-LIGHTHOUSE="lighthouse@12.6.0"
+PLAYWRIGHT="playwright@1.63.0"
+LIGHTHOUSE="lighthouse@13.5.0"
 
 fail() { echo "Ошибка: $*" >&2; exit 1; }
 
