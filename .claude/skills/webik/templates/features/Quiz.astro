@@ -1,0 +1,163 @@
+---
+// Многошаговый квиз-подбор (по мотивам QuizSteps из «Возможностей» webik.tech).
+// Вопросы и варианты — из реального ассортимента клиента. В конце — сводка и переход к заявке
+// с ответами в ?message=. Без JS — обычная форма со всеми вопросами сразу (GET на formHref).
+interface Props {
+  title: string;
+  steps: { key: string; question: string; options: { value: string; label: string }[] }[];
+  result: { title: string; text: string };
+  formHref: string;
+  cta?: string;
+}
+const { title, steps, result, formHref, cta = 'Отправить заявку с ответами' } = Astro.props;
+const uid = `wbq-${Math.random().toString(36).slice(2, 8)}`;
+---
+
+<section class="wb-quiz" data-wb-quiz aria-labelledby={`${uid}-h`}>
+  <div class="wb-quiz-head">
+    <h3 id={`${uid}-h`}>{title}</h3>
+    <div class="wb-quiz-progress" hidden>
+      <div class="wb-quiz-bar"><span></span></div>
+      <span class="wb-quiz-step" aria-live="polite"></span>
+    </div>
+  </div>
+  <form action={formHref} method="get">
+    {
+      steps.map((s, i) => (
+        <fieldset class="wb-quiz-q" data-step={i}>
+          <legend>{s.question}</legend>
+          <div class="wb-quiz-options">
+            {s.options.map((o) => (
+              <label class="wb-quiz-option">
+                <input type="radio" name={s.key} value={o.label} required />
+                <span>{o.label}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      ))
+    }
+    <div class="wb-quiz-result" hidden>
+      <p class="wb-quiz-result-title">{result.title}</p>
+      <p>{result.text}</p>
+      <dl class="wb-quiz-summary"></dl>
+    </div>
+    <div class="wb-quiz-nav">
+      <button type="button" class="wb-quiz-back" hidden>Назад</button>
+      <button type="submit" class="wb-quiz-submit">{cta}</button>
+    </div>
+  </form>
+</section>
+
+<style>
+  /* hidden должен побеждать собственный display компонента */
+  .wb-quiz [hidden] { display: none !important; }
+  .wb-quiz {
+    display: grid;
+    gap: 20px;
+    padding: clamp(20px, 3vw, 32px);
+    border-radius: var(--wb-radius, 16px);
+    background: var(--wb-panel, #f3f1ec);
+    color: var(--wb-ink, #1a1a1a);
+  }
+  .wb-quiz-head { display: grid; gap: 12px; }
+  .wb-quiz h3 { margin: 0; }
+  .wb-quiz-progress { display: flex; gap: 12px; align-items: center; }
+  .wb-quiz-bar { flex: 1; height: 6px; border-radius: 999px; background: var(--wb-line, rgb(0 0 0 / 0.1)); overflow: hidden; }
+  .wb-quiz-bar span { display: block; height: 100%; width: 0; background: var(--wb-brand, #1a1a1a); transition: width 300ms cubic-bezier(0.23, 1, 0.32, 1); }
+  .wb-quiz-step { font-size: 14px; color: var(--wb-ink-soft, #555); font-variant-numeric: tabular-nums; }
+  .wb-quiz form { display: grid; gap: 24px; }
+  .wb-quiz-q { border: 0; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .wb-quiz-q legend { font-weight: 600; font-size: 1.125rem; padding: 0; margin-bottom: 12px; }
+  .wb-quiz-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+  .wb-quiz-option { position: relative; cursor: pointer; }
+  .wb-quiz-option input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .wb-quiz-option span {
+    display: flex;
+    align-items: center;
+    min-height: 52px;
+    padding: 12px 16px;
+    border-radius: var(--wb-radius-sm, 10px);
+    background: var(--wb-surface, #fff);
+    border: 1px solid var(--wb-line, rgb(0 0 0 / 0.1));
+    transition: border-color 150ms ease-out, background-color 150ms ease-out;
+  }
+  .wb-quiz-option:hover span { border-color: var(--wb-ink-soft, #555); }
+  .wb-quiz-option input:checked + span { border-color: var(--wb-brand, #1a1a1a); box-shadow: inset 0 0 0 1px var(--wb-brand, #1a1a1a); }
+  .wb-quiz-option input:focus-visible + span { outline: 3px solid var(--wb-focus, #1a1a1a); outline-offset: 2px; }
+  .wb-quiz-result { display: grid; gap: 8px; }
+  .wb-quiz-result p { margin: 0; }
+  .wb-quiz-result-title { font-weight: 700; font-size: 1.25rem; }
+  .wb-quiz-summary { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 8px 0 0; }
+  .wb-quiz-summary dt { color: var(--wb-ink-soft, #555); }
+  .wb-quiz-summary dd { margin: 0; font-weight: 600; }
+  .wb-quiz-nav { display: flex; gap: 12px; align-items: center; }
+  .wb-quiz-back {
+    min-height: 48px; padding: 0 16px; border: 0; background: none; font: inherit;
+    color: var(--wb-ink-soft, #555); text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+  }
+  .wb-quiz-submit {
+    min-height: 48px; padding: 0 20px; border: 0; border-radius: var(--wb-radius-sm, 12px);
+    background: var(--wb-action, #1a1a1a); color: var(--wb-on-action, #fff); font: inherit; font-weight: 700; cursor: pointer;
+  }
+  .wb-quiz-submit:active { transform: scale(0.97); }
+  .wb-quiz button:focus-visible { outline: 3px solid var(--wb-focus, #1a1a1a); outline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) { .wb-quiz-bar span, .wb-quiz-option span { transition: none; } }
+</style>
+
+<script>
+  for (const root of document.querySelectorAll<HTMLElement>('[data-wb-quiz]')) {
+    const form = root.querySelector('form')!;
+    const steps = [...root.querySelectorAll<HTMLFieldSetElement>('.wb-quiz-q')];
+    const result = root.querySelector<HTMLElement>('.wb-quiz-result')!;
+    const summary = root.querySelector<HTMLElement>('.wb-quiz-summary')!;
+    const back = root.querySelector<HTMLButtonElement>('.wb-quiz-back')!;
+    const submit = root.querySelector<HTMLButtonElement>('.wb-quiz-submit')!;
+    const bar = root.querySelector<HTMLElement>('.wb-quiz-bar span')!;
+    const label = root.querySelector<HTMLElement>('.wb-quiz-step')!;
+    root.querySelector<HTMLElement>('.wb-quiz-progress')!.hidden = false;
+    let current = 0;
+
+    const render = () => {
+      const done = current >= steps.length;
+      steps.forEach((s, i) => (s.hidden = i !== current));
+      result.hidden = !done;
+      submit.hidden = !done;
+      back.hidden = current === 0;
+      bar.style.width = `${(Math.min(current, steps.length) / steps.length) * 100}%`;
+      label.textContent = done ? 'Готово' : `${current + 1} из ${steps.length}`;
+      if (done) {
+        summary.replaceChildren(
+          ...steps.flatMap((s) => {
+            const dt = document.createElement('dt');
+            dt.textContent = s.querySelector('legend')!.textContent!;
+            const dd = document.createElement('dd');
+            dd.textContent = s.querySelector<HTMLInputElement>('input:checked')?.value ?? '—';
+            return [dt, dd];
+          }),
+        );
+      }
+    };
+
+    root.addEventListener('change', (e) => {
+      const input = e.target as HTMLInputElement;
+      if (input.type !== 'radio') return;
+      current = Math.min(current + 1, steps.length);
+      render();
+      (current < steps.length ? steps[current].querySelector('input') : submit)?.focus();
+    });
+    back.addEventListener('click', () => {
+      current = Math.max(0, current - 1);
+      render();
+      steps[current].querySelector<HTMLInputElement>('input:checked, input')?.focus();
+    });
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const answers = steps.map((s) => `${s.querySelector('legend')!.textContent}: ${s.querySelector<HTMLInputElement>('input:checked')?.value ?? '—'}`);
+      const url = new URL(form.action, location.href);
+      url.searchParams.set('message', `Ответы квиза. ${answers.join('; ')}.`);
+      location.href = url.pathname + url.search + url.hash;
+    });
+    render();
+  }
+</script>

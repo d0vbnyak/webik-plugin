@@ -26,6 +26,7 @@ const shot = (side: 'before' | 'after', name: string, device: string) => {
     <meta name="robots" content="noindex, nofollow" />
     <title>{compare.title}</title>
     <meta name="description" content={compare.description} />
+    <link rel="canonical" href={new URL('/', Astro.site)} />
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <style is:global>
 :root {

@@ -1,0 +1,79 @@
+---
+// Аккордеон FAQ (по мотивам Accordion из «Возможностей» webik.tech) на нативных <details>.
+// Работает без JS, с клавиатуры и поиском по странице. Только реальные вопросы и ответы клиента.
+// schema — вывести микроразметку FAQPage (только если вопросы видны на этой странице).
+interface Props {
+  items: { q: string; a: string }[];
+  /** Открыть первый вопрос */
+  openFirst?: boolean;
+  schema?: boolean;
+  /** Имя группы: открыт только один ответ за раз */
+  exclusive?: boolean;
+}
+const { items, openFirst = false, schema = true, exclusive = false } = Astro.props;
+const name = exclusive ? `wb-faq-${Math.random().toString(36).slice(2, 8)}` : undefined;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: items.map((i) => ({ '@type': 'Question', name: i.q, acceptedAnswer: { '@type': 'Answer', text: i.a.replace(/<[^>]+>/g, '') } })),
+};
+---
+
+<div class="wb-faq">
+  {
+    items.map((item, i) => (
+      <details name={name} open={openFirst && i === 0}>
+        <summary>
+          <span>{item.q}</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </summary>
+        <div class="wb-faq-a" set:html={item.a} />
+      </details>
+    ))
+  }
+</div>
+{schema && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+
+<style>
+  .wb-faq { border-top: 1px solid var(--wb-line, rgb(0 0 0 / 0.12)); }
+  details { border-bottom: 1px solid var(--wb-line, rgb(0 0 0 / 0.12)); interpolate-size: allow-keywords; }
+  summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    min-height: 56px;
+    padding: 16px 0;
+    cursor: pointer;
+    list-style: none;
+    font-weight: 600;
+    font-size: 1.0625rem;
+    color: var(--wb-ink, #1a1a1a);
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary:focus-visible { outline: 3px solid var(--wb-focus, #1a1a1a); outline-offset: 4px; border-radius: 4px; }
+  summary svg {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: var(--wb-brand-ink, currentColor);
+    stroke-width: 2;
+    stroke-linecap: round;
+    transition: rotate 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  details[open] summary svg { rotate: 45deg; }
+  details::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition: block-size 250ms cubic-bezier(0.23, 1, 0.32, 1), content-visibility 250ms allow-discrete;
+  }
+  details[open]::details-content { block-size: auto; }
+  .wb-faq-a { padding: 0 40px 20px 0; color: var(--wb-ink-soft, #555); max-width: 70ch; }
+  .wb-faq-a :global(p) { margin: 0 0 8px; }
+  @media (prefers-reduced-motion: reduce) {
+    summary svg, details::details-content { transition: none; }
+  }
+</style>

@@ -76,6 +76,55 @@ if (redirectsPath && fs.existsSync(redirectsPath)) {
   };
 }
 
+// SEO: все страницы старого сайта (.webik/source/pages, сохранены на аудите) против новой сборки
+const sourcePages = opt('--source') || '.webik/source/pages';
+function seoStats(files, readFile) {
+  const stats = { pages: 0, noTitle: 0, dupTitles: 0, noDescription: 0, notOneH1: 0, imgNoAlt: 0, imgTotal: 0, withJsonLd: 0, withCanonical: 0, withOg: 0, withViewport: 0 };
+  const titles = new Map();
+  for (const f of files) {
+    const html = readFile(f);
+    if (/http-equiv=["']?refresh/i.test(html)) continue;
+    stats.pages++;
+    const title = (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || '').trim();
+    if (!title) stats.noTitle++;
+    else titles.set(title, (titles.get(title) || 0) + 1);
+    const desc = html.match(/<meta[^>]+name=["']description["'][^>]*content=["']([^"']*)["']/i)?.[1] ?? html.match(/<meta[^>]+content=["']([^"']*)["'][^>]*name=["']description["']/i)?.[1] ?? '';
+    if (!desc.trim()) stats.noDescription++;
+    if ((html.match(/<h1[\s>]/gi) || []).length !== 1) stats.notOneH1++;
+    const imgs = html.match(/<img\b[^>]*>/gi) || [];
+    stats.imgTotal += imgs.length;
+    stats.imgNoAlt += imgs.filter((i) => !/\salt\s*=\s*["'][^"']+["']/i.test(i) && !/\salt(\s|>|\/)/i.test(i) || /\salt\s*=\s*["']\s*["']/i.test(i) && !/role=["']presentation/i.test(i)).length;
+    if (/application\/ld\+json/i.test(html)) stats.withJsonLd++;
+    if (/<link[^>]+rel=["']canonical/i.test(html)) stats.withCanonical++;
+    if (/<meta[^>]+property=["']og:title/i.test(html)) stats.withOg++;
+    if (/<meta[^>]+name=["']viewport/i.test(html)) stats.withViewport++;
+  }
+  stats.dupTitles = [...titles.values()].filter((n) => n > 1).reduce((a, n) => a + n, 0);
+  return stats;
+}
+const walkHtml = (d) =>
+  fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walkHtml(path.join(d, e.name)) : e.name.endsWith('.html') ? [path.join(d, e.name)] : []));
+const decodeFile = (f) => {
+  const buf = fs.readFileSync(f);
+  const head = buf.subarray(0, 2048).toString('latin1');
+  const cs = (head.match(/charset=["']?([\w-]+)/i)?.[1] || 'utf-8').toLowerCase();
+  try {
+    return new TextDecoder(cs === 'cp1251' ? 'windows-1251' : cs).decode(buf);
+  } catch {
+    return buf.toString('utf8');
+  }
+};
+if (fs.existsSync(sourcePages) && dist && fs.existsSync(dist)) {
+  const oldFiles = walkHtml(sourcePages);
+  const newFiles = walkHtml(dist).filter((f) => !/[\\/]404\.html$/.test(f));
+  facts.seo = {
+    before: seoStats(oldFiles, decodeFile),
+    after: seoStats(newFiles, (f) => fs.readFileSync(f, 'utf8')),
+    sitemapBefore: fs.existsSync(path.join(sourcePages, 'sitemap.xml')) || fs.existsSync(path.join(sourcePages, '..', 'sitemap.xml')),
+    sitemapAfter: fs.readdirSync(dist).some((f) => /^sitemap.*\.xml$/.test(f)),
+  };
+}
+
 // Lighthouse (если снимали с WEBIK_LH=1): медиана по прогонам
 function lighthouse(dir) {
   if (!fs.existsSync(dir)) return null;
@@ -122,6 +171,21 @@ if (facts.redirects) console.log(`Правил 301: ${facts.redirects.permanent}
 for (const [name, s] of Object.entries(facts.scripts)) {
   const fmt = (x) => (x ? `${x.external}${x.counters.length ? ` + встроенные: ${x.counters.join(', ')}` : ''}` : '—');
   console.log(`Сторонние скрипты, ${name}: было ${fmt(s.before)}, стало ${fmt(s.after)}`);
+}
+if (facts.seo) {
+  const { before: b, after: a } = facts.seo;
+  const row = (label, x, y) => console.log(`  ${label}: было ${x}, стало ${y}`);
+  console.log(`SEO (страниц: было ${b.pages}, стало ${a.pages}):`);
+  row('без description', b.noDescription, a.noDescription);
+  row('без title', b.noTitle, a.noTitle);
+  row('страниц с повторяющимся title', b.dupTitles, a.dupTitles);
+  row('не ровно одна h1', b.notOneH1, a.notOneH1);
+  row('картинок без alt', `${b.imgNoAlt} из ${b.imgTotal}`, `${a.imgNoAlt} из ${a.imgTotal}`);
+  row('с микроразметкой JSON-LD', b.withJsonLd, a.withJsonLd);
+  row('с canonical', b.withCanonical, a.withCanonical);
+  row('с Open Graph', b.withOg, a.withOg);
+  row('с viewport (адаптив)', b.withViewport, a.withViewport);
+  row('sitemap', facts.seo.sitemapBefore ? 'есть' : 'нет', facts.seo.sitemapAfter ? 'есть' : 'нет');
 }
 if (facts.lighthouse) {
   const f = (x) => (x ? Object.entries(x.scores).map(([k, v]) => `${k} ${v ?? '—'}`).join(', ') : '—');

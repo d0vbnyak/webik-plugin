@@ -1,0 +1,163 @@
+---
+// Выбор удобного времени для заявки (по мотивам SlotBooking из «Возможностей» webik.tech).
+// Сайт статический и не знает занятость: это ЗАЯВКА на время, а не моментальная запись,
+// и интерфейс прямо так и говорит. Ставится ВНУТРИ формы заявки: выбранное время уходит
+// в скрытое поле name={field}. Дни считаются в браузере от сегодняшней даты по графику клиента.
+// Без JS — обычные поля даты и времени.
+interface Props {
+  /** Рабочие дни недели: 1 — понедельник … 7 — воскресенье */
+  weekdays: number[];
+  /** Время начала слотов по графику клиента */
+  times: string[];
+  /** Сколько дней вперёд показывать */
+  days?: number;
+  /** Не раньше чем через столько часов от текущего момента */
+  leadHours?: number;
+  field?: string;
+  label?: string;
+  hint?: string;
+}
+const {
+  weekdays,
+  times,
+  days = 10,
+  leadHours = 2,
+  field = 'slot',
+  label = 'Удобное время',
+  hint = 'Это заявка на время: мы перезвоним и подтвердим запись.',
+} = Astro.props;
+const uid = `wbs-${Math.random().toString(36).slice(2, 8)}`;
+---
+
+<fieldset class="wb-slot" data-wb-slot data-weekdays={weekdays.join(',')} data-times={times.join(',')} data-days={days} data-lead={leadHours}>
+  <legend>{label}</legend>
+  <p class="wb-slot-hint" id={`${uid}-hint`}>{hint}</p>
+  <div class="wb-slot-days" role="tablist" aria-label="День" hidden></div>
+  <div class="wb-slot-times" role="group" aria-label="Время" hidden></div>
+  <p class="wb-slot-picked" aria-live="polite" hidden></p>
+  <input type="hidden" name={field} />
+  <div class="wb-slot-fallback">
+    <label>Дата <input type="date" name={`${field}-date`} /></label>
+    <label>
+      Время
+      <select name={`${field}-time`}>
+        <option value="">Любое</option>
+        {times.map((t) => <option>{t}</option>)}
+      </select>
+    </label>
+  </div>
+</fieldset>
+
+<style>
+  .wb-slot [hidden] { display: none !important; }
+  .wb-slot { border: 0; margin: 0; padding: 0; display: grid; gap: 12px; min-width: 0; }
+  .wb-slot legend { font-weight: 600; padding: 0; margin-bottom: 4px; }
+  .wb-slot-hint { margin: 0; font-size: 14px; color: var(--wb-ink-soft, #555); }
+  .wb-slot-days { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+  .wb-slot-times { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }
+  .wb-slot button {
+    min-height: 44px;
+    padding: 6px 14px;
+    border-radius: var(--wb-radius-sm, 10px);
+    border: 1px solid var(--wb-line, rgb(0 0 0 / 0.12));
+    background: var(--wb-surface, #fff);
+    color: var(--wb-ink, #1a1a1a);
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    transition: background-color 150ms ease-out, border-color 150ms ease-out, color 150ms ease-out;
+  }
+  .wb-slot-days button { flex: none; display: grid; justify-items: center; line-height: 1.2; }
+  .wb-slot-days button small { font-size: 12px; color: var(--wb-ink-soft, #555); }
+  .wb-slot button:hover { border-color: var(--wb-ink-soft, #555); }
+  .wb-slot button[aria-selected="true"], .wb-slot button[aria-pressed="true"] {
+    background: var(--wb-brand, #1a1a1a);
+    border-color: var(--wb-brand, #1a1a1a);
+    color: var(--wb-on-brand, #fff);
+  }
+  .wb-slot button[aria-selected="true"] small { color: inherit; }
+  .wb-slot button:focus-visible { outline: 3px solid var(--wb-focus, #1a1a1a); outline-offset: 2px; }
+  .wb-slot-picked { margin: 0; font-weight: 600; }
+  .wb-slot-fallback { display: flex; flex-wrap: wrap; gap: 12px; }
+  .wb-slot-fallback label { display: grid; gap: 4px; font-size: 14px; }
+  .wb-slot[data-ready] .wb-slot-fallback { display: none; }
+</style>
+
+<script>
+  for (const root of document.querySelectorAll<HTMLElement>('[data-wb-slot]')) {
+    const weekdays = root.dataset.weekdays!.split(',').map(Number);
+    const times = root.dataset.times!.split(',');
+    const daysAhead = Number(root.dataset.days);
+    const lead = Number(root.dataset.lead) * 3600_000;
+    const daysEl = root.querySelector<HTMLElement>('.wb-slot-days')!;
+    const timesEl = root.querySelector<HTMLElement>('.wb-slot-times')!;
+    const picked = root.querySelector<HTMLElement>('.wb-slot-picked')!;
+    const hidden = root.querySelector<HTMLInputElement>('input[type="hidden"]')!;
+    root.querySelectorAll<HTMLInputElement | HTMLSelectElement>('.wb-slot-fallback input, .wb-slot-fallback select').forEach((el) => (el.disabled = true));
+
+    const now = new Date();
+    const slotDate = (day: Date, t: string) => {
+      const [h, m] = t.split(':').map(Number);
+      const d = new Date(day);
+      d.setHours(h, m, 0, 0);
+      return d;
+    };
+    const days: Date[] = [];
+    for (let i = 0; days.length < daysAhead && i < 60; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+      const wd = d.getDay() || 7;
+      if (!weekdays.includes(wd)) continue;
+      if (!times.some((t) => slotDate(d, t).getTime() - now.getTime() >= lead)) continue;
+      days.push(d);
+    }
+
+    const dayFmt = new Intl.DateTimeFormat('ru-RU', { weekday: 'short' });
+    const dateFmt = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'short' });
+    const fullFmt = new Intl.DateTimeFormat('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
+    let dayIndex = 0;
+    let choice: { day: number; time: string } | null = null;
+
+    const renderTimes = () => {
+      const day = days[dayIndex];
+      timesEl.replaceChildren(
+        ...times
+          .filter((t) => slotDate(day, t).getTime() - now.getTime() >= lead)
+          .map((t) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.textContent = t;
+            b.setAttribute('aria-pressed', String(choice?.day === dayIndex && choice.time === t));
+            b.addEventListener('click', () => {
+              choice = choice?.day === dayIndex && choice.time === t ? null : { day: dayIndex, time: t };
+              hidden.value = choice ? `${fullFmt.format(days[choice.day])}, ${choice.time}` : '';
+              picked.hidden = !choice;
+              picked.textContent = choice ? `Вы выбрали: ${hidden.value}` : '';
+              renderTimes();
+            });
+            return b;
+          }),
+      );
+    };
+    daysEl.replaceChildren(
+      ...days.map((d, i) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.setAttribute('role', 'tab');
+        b.setAttribute('aria-selected', String(i === 0));
+        b.innerHTML = `<span>${dateFmt.format(d)}</span><small>${dayFmt.format(d)}</small>`;
+        b.addEventListener('click', () => {
+          dayIndex = i;
+          daysEl.querySelectorAll('button').forEach((x, j) => x.setAttribute('aria-selected', String(j === i)));
+          renderTimes();
+        });
+        return b;
+      }),
+    );
+    if (days.length) {
+      daysEl.hidden = false;
+      timesEl.hidden = false;
+      root.setAttribute('data-ready', '');
+      renderTimes();
+    }
+  }
+</script>

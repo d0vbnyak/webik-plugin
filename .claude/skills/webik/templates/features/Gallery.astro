@@ -1,0 +1,204 @@
+---
+// Галерея с лайтбоксом (по мотивам LightboxGallery из «Возможностей» webik.tech).
+// Миниатюры — сетка кнопок; по клику — <dialog> с крупным фото, стрелки, свайп, Escape, счётчик.
+// Без JS миниатюры остаются ссылками на полноразмерные фото.
+import { Image, getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+  images: { src: ImageMetadata; alt: string; caption?: string }[];
+  /** Подпись группы для экранных читалок, например «Фото тура на Монерон» */
+  label: string;
+  columns?: 2 | 3 | 4;
+}
+const { images, label, columns = 3 } = Astro.props;
+const full = await Promise.all(images.map((i) => getImage({ src: i.src, width: Math.min(i.src.width, 1800), format: 'webp' })));
+---
+
+<div class="wb-gallery" data-wb-gallery style={`--cols: ${columns}`} role="group" aria-label={label}>
+  {
+    images.map((img, i) => (
+      <a
+        class="wb-gallery-thumb"
+        href={full[i].src}
+        data-index={i}
+        data-full={full[i].src}
+        data-alt={img.alt}
+        data-caption={img.caption ?? ''}
+        aria-label={`Открыть фото: ${img.alt}`}
+      >
+        <Image src={img.src} alt="" widths={[320, 480, 720]} sizes={`(min-width: 900px) ${Math.round(1200 / columns)}px, 50vw`} />
+      </a>
+    ))
+  }
+  <dialog class="wb-lightbox" aria-label={label}>
+    <figure>
+      <img class="wb-lightbox-img" alt="" />
+      <figcaption>
+        <span class="wb-lightbox-caption"></span>
+        <span class="wb-lightbox-count" aria-live="polite"></span>
+      </figcaption>
+    </figure>
+    <button type="button" class="wb-lightbox-btn prev" data-dir="-1" aria-label="Предыдущее фото">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+    </button>
+    <button type="button" class="wb-lightbox-btn next" data-dir="1" aria-label="Следующее фото">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+    </button>
+    <button type="button" class="wb-lightbox-btn close" aria-label="Закрыть">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+    </button>
+  </dialog>
+</div>
+
+<style>
+  .wb-gallery [hidden] { display: none !important; }
+  .wb-gallery {
+    display: grid;
+    grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+    gap: 8px;
+  }
+  @media (max-width: 640px) {
+    .wb-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  .wb-gallery-thumb {
+    position: relative;
+    display: block;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: var(--wb-radius-sm, 8px);
+    background: var(--wb-panel, #eee);
+    outline-offset: 3px;
+  }
+  .wb-gallery-thumb :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 300ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  .wb-gallery-thumb::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.08);
+  }
+  .wb-gallery-thumb:hover :global(img) { transform: scale(1.03); }
+  .wb-gallery-thumb:focus-visible { outline: 3px solid var(--wb-focus, currentColor); }
+
+  .wb-lightbox {
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: rgb(10 12 14 / 0.94);
+    color: #fff;
+  }
+  .wb-lightbox::backdrop { background: transparent; }
+  .wb-lightbox[open] { display: grid; place-items: center; }
+  .wb-lightbox figure {
+    margin: 0;
+    display: grid;
+    gap: 12px;
+    justify-items: center;
+    padding: 56px 16px 24px;
+    touch-action: pan-y;
+  }
+  .wb-lightbox-img {
+    max-width: min(100%, 1400px);
+    max-height: calc(100dvh - 140px);
+    object-fit: contain;
+    border-radius: 6px;
+  }
+  .wb-lightbox figcaption {
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    width: min(100%, 1400px);
+    font-size: 15px;
+    color: rgb(255 255 255 / 0.8);
+  }
+  .wb-lightbox-count { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .wb-lightbox-btn {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border: 0;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.14);
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 150ms ease-out;
+  }
+  .wb-lightbox-btn:hover { background: rgb(255 255 255 / 0.24); }
+  .wb-lightbox-btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+  .wb-lightbox-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .wb-lightbox-btn.prev { left: 12px; top: 50%; translate: 0 -50%; }
+  .wb-lightbox-btn.next { right: 12px; top: 50%; translate: 0 -50%; }
+  .wb-lightbox-btn.close { right: 12px; top: 12px; }
+  @media (max-width: 640px) {
+    .wb-lightbox-btn.prev, .wb-lightbox-btn.next { top: auto; bottom: 16px; translate: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wb-gallery-thumb :global(img) { transition: none; }
+  }
+</style>
+
+<script>
+  for (const root of document.querySelectorAll<HTMLElement>('[data-wb-gallery]')) {
+    const thumbs = [...root.querySelectorAll<HTMLAnchorElement>('.wb-gallery-thumb')];
+    const dialog = root.querySelector<HTMLDialogElement>('.wb-lightbox')!;
+    const img = dialog.querySelector<HTMLImageElement>('.wb-lightbox-img')!;
+    const caption = dialog.querySelector<HTMLElement>('.wb-lightbox-caption')!;
+    const count = dialog.querySelector<HTMLElement>('.wb-lightbox-count')!;
+    let index = 0;
+    let opener: HTMLElement | null = null;
+
+    const show = (i: number) => {
+      index = (i + thumbs.length) % thumbs.length;
+      const t = thumbs[index];
+      img.src = t.dataset.full!;
+      img.alt = t.dataset.alt!;
+      caption.textContent = t.dataset.caption || t.dataset.alt || '';
+      count.textContent = `${index + 1} из ${thumbs.length}`;
+    };
+
+    thumbs.forEach((t, i) =>
+      t.addEventListener('click', (e) => {
+        e.preventDefault();
+        opener = t;
+        show(i);
+        dialog.showModal();
+      }),
+    );
+    dialog.querySelectorAll<HTMLButtonElement>('[data-dir]').forEach((b) => b.addEventListener('click', () => show(index + Number(b.dataset.dir))));
+    dialog.querySelector('.close')!.addEventListener('click', () => dialog.close());
+    // Браузер обычно сам возвращает фокус; возвращаем вручную, только если он потерялся,
+    // иначе отложенное событие close отберёт фокус у элемента, куда пользователь уже перешёл
+    dialog.addEventListener('close', () => {
+      const a = document.activeElement;
+      if (!a || a === document.body || dialog.contains(a)) opener?.focus();
+    });
+    dialog.addEventListener('click', (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+    dialog.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') show(index - 1);
+      else if (e.key === 'ArrowRight') show(index + 1);
+    });
+    if (thumbs.length < 2) dialog.querySelectorAll<HTMLElement>('[data-dir]').forEach((b) => (b.hidden = true));
+
+    // Свайп по фото
+    let startX = 0;
+    dialog.addEventListener('pointerdown', (e) => (startX = e.clientX));
+    dialog.addEventListener('pointerup', (e) => {
+      const dx = e.clientX - startX;
+      if (Math.abs(dx) > 60 && e.pointerType !== 'mouse') show(index + (dx < 0 ? 1 : -1));
+    });
+  }
+</script>

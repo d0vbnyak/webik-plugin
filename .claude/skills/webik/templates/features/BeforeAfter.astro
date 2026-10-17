@@ -1,0 +1,126 @@
+---
+// Слайдер «до / после» по двум фото (по мотивам PhotoBeforeAfter из «Возможностей» webik.tech).
+// Для ремонта, клининга, косметологии, реставрации, обработки фото — только реальные пары фото клиента.
+// Слева «до», справа «после» (в исходнике webik подписи перепутаны — здесь исправлено).
+// Мышь, палец (разделитель едет только за движением), клавиатура: стрелки, Shift, Home, End.
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+  before: ImageMetadata;
+  after: ImageMetadata;
+  beforeAlt: string;
+  afterAlt: string;
+  /** Что сравниваем — для экранных читалок: «Кухня до и после ремонта» */
+  label: string;
+  labels?: [string, string];
+}
+const { before, after, beforeAlt, afterAlt, label, labels = ['До', 'После'] } = Astro.props;
+const ratio = `${after.width} / ${after.height}`;
+---
+
+<div class="wb-ba" data-wb-ba style={`--pos: 50%; aspect-ratio: ${ratio}`}>
+  <Image src={before} alt={beforeAlt} widths={[480, 800, 1200, 1600]} sizes="(min-width: 900px) 800px, 100vw" draggable="false" />
+  <div class="wb-ba-after">
+    <Image src={after} alt={afterAlt} widths={[480, 800, 1200, 1600]} sizes="(min-width: 900px) 800px, 100vw" draggable="false" />
+  </div>
+  <span class="wb-ba-tag before" aria-hidden="true">{labels[0]}</span>
+  <span class="wb-ba-tag after" aria-hidden="true">{labels[1]}</span>
+  <div class="wb-ba-line" aria-hidden="true"></div>
+  <div
+    class="wb-ba-handle"
+    role="slider"
+    tabindex="0"
+    aria-label={label}
+    aria-valuemin="0"
+    aria-valuemax="100"
+    aria-valuenow="50"
+    aria-valuetext={`Поровну: слева ${labels[0].toLowerCase()}, справа ${labels[1].toLowerCase()}`}
+    data-labels={labels.join('|')}
+  >
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+      <path d="M9 6 3 12l6 6M15 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+  </div>
+</div>
+
+<style>
+  .wb-ba {
+    --pos: 50%;
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--wb-radius, 14px);
+    background: var(--wb-panel, #eee);
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: ew-resize;
+  }
+  .wb-ba::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.08); pointer-events: none; }
+  .wb-ba :global(img) { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; -webkit-user-drag: none; }
+  .wb-ba-after { position: absolute; inset: 0; clip-path: inset(0 0 0 var(--pos)); }
+  .wb-ba-line { position: absolute; top: 0; bottom: 0; left: var(--pos); width: 2px; margin-left: -1px; background: #fff; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.18); pointer-events: none; }
+  .wb-ba-handle {
+    position: absolute; top: 50%; left: var(--pos); width: 48px; height: 48px; translate: -50% -50%;
+    display: grid; place-items: center; border-radius: 999px; background: #fff; color: var(--wb-ink, #1a1a1a);
+    box-shadow: 0 2px 6px rgb(0 0 0 / 0.18), 0 8px 24px rgb(0 0 0 / 0.18);
+    transition: scale 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .wb-ba:hover .wb-ba-handle { scale: 1.06; }
+  .wb-ba[data-dragging] .wb-ba-handle { scale: 0.96; }
+  .wb-ba-handle:focus-visible { outline: 3px solid var(--wb-focus, #fff); outline-offset: 3px; }
+  .wb-ba-tag {
+    position: absolute; top: 12px; padding: 4px 10px; border-radius: 999px; pointer-events: none;
+    font-size: 13px; font-weight: 700; background: rgb(0 0 0 / 0.55); color: #fff; transition: opacity 160ms ease-out;
+  }
+  .wb-ba-tag.before { left: 12px; }
+  .wb-ba-tag.after { right: 12px; }
+  .wb-ba[data-hide-before] .wb-ba-tag.before, .wb-ba[data-hide-after] .wb-ba-tag.after { opacity: 0; }
+  @media (prefers-reduced-motion: reduce) { .wb-ba-handle, .wb-ba-tag { transition: none; } }
+</style>
+
+<script>
+  for (const ba of document.querySelectorAll<HTMLElement>('[data-wb-ba]')) {
+    const handle = ba.querySelector<HTMLElement>('.wb-ba-handle')!;
+    const [lb, la] = handle.dataset.labels!.split('|').map((s) => s.toLowerCase());
+    let pos = 50;
+    let dragging = false;
+    const set = (value: number) => {
+      pos = Math.max(0, Math.min(100, value));
+      const v = Math.round(pos);
+      ba.style.setProperty('--pos', `${pos}%`);
+      handle.setAttribute('aria-valuenow', String(v));
+      handle.setAttribute('aria-valuetext', `${lb} ${v}% кадра, ${la} ${100 - v}%`);
+      ba.toggleAttribute('data-hide-before', pos < 14);
+      ba.toggleAttribute('data-hide-after', pos > 86);
+    };
+    const fromX = (x: number) => {
+      const r = ba.getBoundingClientRect();
+      set(((x - r.left) / r.width) * 100);
+    };
+    const end = (e: PointerEvent) => {
+      dragging = false;
+      ba.removeAttribute('data-dragging');
+      if (ba.hasPointerCapture(e.pointerId)) ba.releasePointerCapture(e.pointerId);
+    };
+    ba.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      ba.setPointerCapture(e.pointerId);
+      dragging = true;
+      ba.setAttribute('data-dragging', '');
+      if (e.pointerType === 'mouse') fromX(e.clientX);
+    });
+    ba.addEventListener('pointermove', (e) => dragging && fromX(e.clientX));
+    ba.addEventListener('pointerup', end);
+    ba.addEventListener('pointercancel', end);
+    handle.addEventListener('keydown', (e) => {
+      const step = e.shiftKey ? 10 : 4;
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') set(pos - step);
+      else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') set(pos + step);
+      else if (e.key === 'Home') set(0);
+      else if (e.key === 'End') set(100);
+      else return;
+      e.preventDefault();
+    });
+  }
+</script>

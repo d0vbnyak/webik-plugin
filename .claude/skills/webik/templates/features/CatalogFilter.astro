@@ -1,0 +1,150 @@
+---
+// Живой фильтр каталога (по мотивам CatalogFilter из «Возможностей» webik.tech).
+// Карточки рендерятся сервером и лежат в слоте; фильтр только прячет лишние.
+// Каждая карточка — элемент с data-wb-item и атрибутами data-<ключ группы>="значение1 значение2",
+// для цены — data-price="12000". Без JS видны все карточки.
+interface Option {
+  value: string;
+  label: string;
+}
+interface Props {
+  groups: { key: string; label: string; options: Option[] }[];
+  /** Фильтр «цена до»: шаг должен делить (max − min) нацело */
+  price?: { min: number; max: number; step: number; label?: string };
+  /** Подпись счётчика: «Найдено туров», «Найдено товаров» */
+  countLabel: string;
+  emptyText?: string;
+}
+const { groups, price, countLabel, emptyText = 'Ничего не найдено. Снимите часть фильтров.' } = Astro.props;
+const uid = `wbf-${Math.random().toString(36).slice(2, 8)}`;
+---
+
+<div class="wb-filter" data-wb-filter>
+  <div class="wb-filter-bar">
+    {
+      groups.map((g) => (
+        <fieldset class="wb-filter-group" data-key={g.key}>
+          <legend>{g.label}</legend>
+          <div class="wb-chips">
+            {g.options.map((o) => (
+              <label class="wb-chip">
+                <input type="checkbox" value={o.value} />
+                <span>{o.label}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      ))
+    }
+    {
+      price && (
+        <div class="wb-filter-price">
+          <label for={`${uid}-price`}>{price.label ?? 'Цена до'}</label>
+          <input id={`${uid}-price`} type="range" min={price.min} max={price.max} step={price.step} value={price.max} />
+          <output for={`${uid}-price`}>{price.max.toLocaleString('ru-RU')}&nbsp;₽</output>
+        </div>
+      )
+    }
+    <div class="wb-filter-status">
+      <span aria-live="polite">{countLabel}: <b data-count>—</b></span>
+      <button type="button" class="wb-filter-reset" hidden>Сбросить фильтры</button>
+    </div>
+  </div>
+
+  <slot />
+  <p class="wb-filter-empty" hidden>{emptyText}</p>
+</div>
+
+<style>
+  .wb-filter { display: grid; gap: 24px; min-width: 0; }
+  .wb-filter > :global(*) { min-width: 0; }
+  .wb-filter :global([data-wb-item][hidden]) { display: none !important; }
+  .wb-filter-bar { display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: end; }
+  .wb-filter-group { border: 0; margin: 0; padding: 0; min-width: 0; }
+  .wb-filter-group legend, .wb-filter-price label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--wb-ink-soft, #555);
+    margin-bottom: 8px;
+    padding: 0;
+  }
+  .wb-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .wb-chip { position: relative; cursor: pointer; }
+  .wb-chip input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+  .wb-chip span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid var(--wb-line, rgb(0 0 0 / 0.14));
+    background: var(--wb-surface, #fff);
+    color: var(--wb-ink, #1a1a1a);
+    font-size: 15px;
+    transition: background-color 150ms ease-out, color 150ms ease-out, border-color 150ms ease-out;
+  }
+  .wb-chip:hover span { border-color: var(--wb-ink-soft, #555); }
+  .wb-chip input:checked + span { background: var(--wb-brand, #1a1a1a); border-color: var(--wb-brand, #1a1a1a); color: var(--wb-on-brand, #fff); }
+  .wb-chip input:focus-visible + span { outline: 3px solid var(--wb-focus, #1a1a1a); outline-offset: 2px; }
+  .wb-filter-price { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; flex: 1 1 260px; max-width: 360px; min-width: 0; }
+  .wb-filter-price label { grid-column: 1 / -1; margin: 0; }
+  .wb-filter-price input { min-width: 0; width: 100%; accent-color: var(--wb-brand, #1a1a1a); height: 32px; }
+  .wb-filter-price output { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; white-space: nowrap; }
+  .wb-filter-status { display: flex; gap: 16px; align-items: center; margin-left: auto; color: var(--wb-ink-soft, #555); font-size: 15px; }
+  .wb-filter-status b { color: var(--wb-ink, #1a1a1a); font-variant-numeric: tabular-nums; }
+  .wb-filter-reset {
+    border: 0;
+    background: none;
+    padding: 8px 0;
+    color: var(--wb-brand-ink, #1a1a1a);
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .wb-filter-empty { color: var(--wb-ink-soft, #555); padding: 32px 0; margin: 0; }
+  @media (prefers-reduced-motion: reduce) {
+    .wb-chip span { transition: none; }
+  }
+</style>
+
+<script>
+  for (const root of document.querySelectorAll<HTMLElement>('[data-wb-filter]')) {
+    const items = [...root.querySelectorAll<HTMLElement>('[data-wb-item]')];
+    const groups = [...root.querySelectorAll<HTMLFieldSetElement>('.wb-filter-group')];
+    const range = root.querySelector<HTMLInputElement>('.wb-filter-price input');
+    const output = root.querySelector<HTMLOutputElement>('.wb-filter-price output');
+    const count = root.querySelector<HTMLElement>('[data-count]')!;
+    const empty = root.querySelector<HTMLElement>('.wb-filter-empty')!;
+    const reset = root.querySelector<HTMLButtonElement>('.wb-filter-reset')!;
+
+    const apply = () => {
+      const active = groups
+        .map((g) => ({ key: g.dataset.key!, values: [...g.querySelectorAll<HTMLInputElement>('input:checked')].map((i) => i.value) }))
+        .filter((g) => g.values.length);
+      const maxPrice = range ? Number(range.value) : Infinity;
+      let shown = 0;
+      for (const item of items) {
+        const byGroups = active.every((g) => (item.dataset[g.key] ?? '').split(/\s+/).some((v) => g.values.includes(v)));
+        const price = Number(item.dataset.price);
+        const byPrice = !range || !item.dataset.price || price <= maxPrice;
+        const visible = byGroups && byPrice;
+        item.hidden = !visible;
+        if (visible) shown++;
+      }
+      count.textContent = String(shown);
+      empty.hidden = shown > 0;
+      reset.hidden = !active.length && (!range || Number(range.value) === Number(range.max));
+      if (range && output) output.textContent = `${Number(range.value).toLocaleString('ru-RU')} ₽`;
+    };
+
+    root.addEventListener('change', apply);
+    range?.addEventListener('input', apply);
+    reset.addEventListener('click', () => {
+      root.querySelectorAll<HTMLInputElement>('.wb-filter-group input').forEach((i) => (i.checked = false));
+      if (range) range.value = range.max;
+      apply();
+    });
+    apply();
+  }
+</script>

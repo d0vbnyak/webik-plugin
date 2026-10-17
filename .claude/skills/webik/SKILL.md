@@ -52,6 +52,14 @@ description: Реконструкция и редизайн существующ
 - `references/astro-stack.md` — структура Astro-проекта, Tailwind-токены, картинки, шрифты, формы, редиректы.
 - `references/seo.md` — SEO-чек-лист реконструкции: метаданные, микроразметка, sitemap, сохранение URL, Яндекс и Google.
 - `references/design-template.md` — шаблон `.webik/design.md`.
+- `references/features.md` — возможности webik.tech для сайтов клиентов: какие предлагать, готовые компоненты, перенос из исходников.
+
+## Шаблоны и скрипты плагина
+
+- `templates/features/` — готовые компоненты возможностей webik на Astro: галерея с лайтбоксом, фильтр каталога, калькулятор, квиз, FAQ, выбор времени для заявки, слайдер «до / после».
+- `templates/compare/` — страница «было / стало» для главной демо и пример данных.
+- `templates/icons/` — официальные знаки Telegram, WhatsApp, Max.
+- `scripts/check-site.mjs` — проверка собранного сайта; `scripts/check-ai-tells.sh` — признаки AI-работы; `scripts/deploy-demo.sh` — выкладка на демо; `scripts/capture.sh` и `scripts/compare-facts.mjs` — снимки и цифры для сравнения.
 
 Пути к справочникам указаны относительно папки этого скилла (base directory, которую показывает загрузка скилла).
 
