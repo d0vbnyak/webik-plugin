@@ -1,0 +1,342 @@
+---
+// Страница «было / стало» для клиента. Только в демо-сборке: в боевую не попадает.
+// Данные — src/data/compare.ts (пример: compare.example.ts в плагине).
+// Скриншоты — src/assets/compare/{before,after}-<name>-<desktop|mobile>.png (capture.sh).
+// Цвета и шрифты — переменные --cmp-* ниже: замени значения на токены сайта.
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import { compare } from '../../data/compare';
+
+const files = import.meta.glob<{ default: ImageMetadata }>('../../assets/compare/*.{png,jpg,jpeg,webp}', { eager: true });
+const shots = Object.fromEntries(
+  Object.entries(files).map(([p, m]) => [p.split('/').pop()!.replace(/\.(png|jpe?g|webp)$/, ''), m.default]),
+);
+const shot = (side: 'before' | 'after', name: string, device: string) => {
+  const key = `${side}-${name}-${device}`;
+  if (!shots[key]) throw new Error(`Нет скриншота src/assets/compare/${key}.png`);
+  return shots[key];
+};
+---
+
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{compare.title}</title>
+    <meta name="description" content={compare.description} />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <style is:global>
+:root {
+  /* Замени на токены сайта: тёмный фон шапки, текст, фон страницы, бренд, акцент действия */
+  --cmp-dark: #1c2428;
+  --cmp-on-dark: #ffffff;
+  --cmp-on-dark-soft: #c9d3d6;
+  --cmp-ink: #1c2428;
+  --cmp-ink-soft: #46545a;
+  --cmp-ink-muted: #66757b;
+  --cmp-paper: #f7f5f0;
+  --cmp-panel: #ece8df;
+  --cmp-line: rgb(28 36 40 / 0.12);
+  --cmp-brand: #0e7c86;
+  --cmp-brand-ink: #0b6870;
+  --cmp-brand-wash: #dcefef;
+  --cmp-was: #b4530a;
+  --cmp-was-wash: #fdf0e3;
+  --cmp-action: #e8862a;
+  --cmp-on-action: #1c2428;
+  --cmp-font-display: system-ui, sans-serif;
+  --cmp-font-body: system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--cmp-paper); color: var(--cmp-ink);
+  font: 400 17px/1.55 var(--cmp-font-body); -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums;
+}
+.wrap { max-width: 1200px; margin: 0 auto; padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--cmp-font-display); letter-spacing: -0.02em; text-wrap: balance; margin: 0; }
+p { margin: 0; text-wrap: pretty; }
+a { color: var(--cmp-brand-ink); }
+a:focus-visible { outline: 3px solid var(--cmp-brand); outline-offset: 2px; border-radius: 4px; }
+.eyebrow { font-weight: 700; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
+img { max-width: 100%; }
+
+.top { background: var(--cmp-dark); color: var(--cmp-on-dark); }
+.top .wrap { padding-block: 56px 48px; display: grid; gap: 28px; }
+.top .eyebrow { color: var(--cmp-brand-wash); }
+.top h1 { font-weight: 600; font-size: clamp(2rem, 1.3rem + 3vw, 3.5rem); line-height: 1.06; }
+.top .lead { color: var(--cmp-on-dark-soft); font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem); max-width: 60ch; }
+.links { display: flex; flex-wrap: wrap; gap: 12px; }
+.links a { display: inline-flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 20px; border-radius: 12px; font-weight: 700; text-decoration: none; }
+.links .new { background: var(--cmp-action); color: var(--cmp-on-action); }
+.links .old { border: 1.5px solid rgb(255 255 255 / 0.45); color: var(--cmp-on-dark); }
+.links small { font-weight: 500; opacity: 0.8; }
+.facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 8px; }
+.fact { border-top: 2px solid var(--cmp-brand); padding-top: 14px; display: grid; gap: 4px; align-content: start; }
+.fact b { font-family: var(--cmp-font-display); font-weight: 600; font-size: clamp(1.5rem, 1.2rem + 1vw, 2.125rem); line-height: 1.1; }
+.fact span { color: var(--cmp-on-dark-soft); font-size: 15px; }
+
+section { padding-block: 72px 24px; }
+.sec-head { display: grid; gap: 10px; margin-bottom: 32px; max-width: 70ch; }
+.sec-head h2 { font-weight: 500; font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.25rem); line-height: 1.12; }
+.sec-head p { color: var(--cmp-ink-soft); }
+.sec-head .eyebrow { color: var(--cmp-brand-ink); }
+
+.pairs { display: grid; gap: 64px; }
+.pair { display: grid; gap: 16px; }
+.pair h3 { font-weight: 500; font-size: clamp(1.125rem, 1rem + 0.4vw, 1.375rem); }
+.pair-body { display: grid; grid-template-columns: minmax(0, 800px) minmax(0, 1fr); gap: 36px; align-items: start; }
+.pair.mobile .pair-body { grid-template-columns: minmax(0, 360px) minmax(0, 1fr); }
+.ba {
+  --pos: 50%;
+  position: relative; border-radius: 14px; overflow: hidden; background: var(--cmp-panel);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 12px 32px -12px rgb(0 0 0 / 0.22);
+  aspect-ratio: 1280 / 800; touch-action: pan-y; user-select: none; -webkit-user-select: none; cursor: ew-resize;
+}
+.pair.mobile .ba { aspect-ratio: 375 / 812; }
+.ba::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--cmp-line); pointer-events: none; }
+.ba img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; pointer-events: none; -webkit-user-drag: none; }
+.ba-now { position: absolute; inset: 0; clip-path: inset(0 0 0 var(--pos)); }
+.ba-line { position: absolute; top: 0; bottom: 0; left: var(--pos); width: 2px; margin-left: -1px; background: #fff; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.18); pointer-events: none; }
+.ba-handle {
+  position: absolute; top: 50%; left: var(--pos); width: 48px; height: 48px; translate: -50% -50%;
+  display: grid; place-items: center; border-radius: 999px; background: #fff; color: var(--cmp-ink);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.18), 0 8px 24px rgb(0 0 0 / 0.18);
+  transition: scale 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.ba:hover .ba-handle { scale: 1.06; }
+.ba[data-dragging] .ba-handle { scale: 0.96; }
+.ba-handle:focus-visible { outline: 3px solid var(--cmp-brand); outline-offset: 3px; }
+.tag { position: absolute; top: 12px; padding: 4px 10px; border-radius: 999px; pointer-events: none; font-size: 13px; font-weight: 700; letter-spacing: 0.02em; transition: opacity 160ms ease-out; }
+.tag.was { left: 12px; background: var(--cmp-was-wash); color: var(--cmp-was); }
+.tag.now { right: 12px; background: var(--cmp-brand-wash); color: var(--cmp-brand-ink); }
+.ba[data-hide-was] .tag.was, .ba[data-hide-now] .tag.now { opacity: 0; }
+.notes { display: grid; gap: 22px; align-content: start; padding-top: 4px; }
+.note { display: grid; gap: 6px; padding-left: 16px; border-left: 2px solid var(--cmp-line); }
+.note.was { border-left-color: var(--cmp-was); }
+.note.now { border-left-color: var(--cmp-brand); }
+.label { font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.was .label { color: var(--cmp-was); }
+.now .label { color: var(--cmp-brand-ink); }
+.note p { color: var(--cmp-ink-soft); font-size: 16px; }
+.note b { color: var(--cmp-ink); }
+@media (prefers-reduced-motion: reduce) { .ba-handle, .tag { transition: none; } }
+
+.group { display: grid; margin-bottom: 48px; }
+.group > h3 { font-weight: 500; font-size: clamp(1.125rem, 1rem + 0.4vw, 1.375rem); padding-bottom: 14px; border-bottom: 2px solid var(--cmp-ink); margin-bottom: 4px; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; padding-block: 22px; border-bottom: 1px solid var(--cmp-line); }
+.row h4 { margin: 0 0 6px; font-size: 18px; font-weight: 700; }
+.side { display: grid; gap: 6px; align-content: start; min-width: 0; }
+.side p, .side li { color: var(--cmp-ink-soft); font-size: 16px; }
+.side ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 0.88em; background: var(--cmp-panel); padding: 1px 6px; border-radius: 6px; overflow-wrap: anywhere; }
+
+.todo { background: var(--cmp-panel); border-radius: 20px; padding: 28px; display: grid; gap: 14px; }
+.todo h2 { font-weight: 500; font-size: clamp(1.375rem, 1.1rem + 1vw, 1.875rem); }
+.todo ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; columns: 2; column-gap: 40px; }
+.todo li { break-inside: avoid; color: var(--cmp-ink-soft); }
+.todo p { color: var(--cmp-ink-soft); }
+footer { padding-block: 48px 64px; color: var(--cmp-ink-muted); font-size: 14px; }
+
+@media (max-width: 860px) {
+  .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 20px; }
+  .row { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .pair-body, .pair.mobile .pair-body { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .pair.mobile .ba { width: min(100%, 360px); }
+  .notes { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+  .todo ul { columns: 1; }
+}
+@media (max-width: 560px) {
+  .top .wrap { padding-block: 40px 36px; }
+  section { padding-block: 52px 16px; }
+  .todo { padding: 20px; }
+  .notes { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+}
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="wrap">
+        <div class="eyebrow">{compare.eyebrow}</div>
+        <h1>{compare.title}</h1>
+        <p class="lead">{compare.lead}</p>
+        <div class="links">
+          <a class="new" href={compare.newHref}>Открыть новый сайт</a>
+          <a class="old" href={compare.oldUrl} rel="noopener">Старый сайт <small>{compare.oldUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}</small></a>
+        </div>
+        {
+          compare.facts.length > 0 && (
+            <div class="facts">
+              {compare.facts.map((f) => (
+                <div class="fact">
+                  <b>{f.value}</b>
+                  <span>{f.label}</span>
+                </div>
+              ))}
+            </div>
+          )
+        }
+      </div>
+    </header>
+
+    <main>
+      <section class="wrap" aria-labelledby="shots-h">
+        <div class="sec-head">
+          <div class="eyebrow">Своими глазами</div>
+          <h2 id="shots-h">Те же страницы, тот же экран</h2>
+          <p>{compare.shotsNote} Потяните разделитель, чтобы сравнить.</p>
+        </div>
+        <div class="pairs">
+          {
+            compare.pairs.map((p) => {
+              const mobile = p.device === 'mobile';
+              const widths = mobile ? [375, 750, 1125] : [800, 1200, 1600, 2560];
+              const sizes = mobile ? '360px' : '(min-width: 860px) 800px, 100vw';
+              return (
+                <div class:list={['pair', mobile && 'mobile']}>
+                  <h3>{p.title}</h3>
+                  <div class="pair-body">
+                    <div class="ba" data-ba style="--pos: 50%">
+                      <Image src={shot('before', p.name, p.device)} alt={p.old.alt} widths={widths} sizes={sizes} quality={90} draggable="false" />
+                      <div class="ba-now">
+                        <Image src={shot('after', p.name, p.device)} alt={p.now.alt} widths={widths} sizes={sizes} quality={90} draggable="false" />
+                      </div>
+                      <span class="tag was" aria-hidden="true">Было</span>
+                      <span class="tag now" aria-hidden="true">Стало</span>
+                      <div class="ba-line" aria-hidden="true" />
+                      <div
+                        class="ba-handle"
+                        role="slider"
+                        tabindex="0"
+                        aria-label={`${p.title}: сравнить было и стало`}
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                        aria-valuenow="50"
+                        aria-valuetext="Поровну: слева было, справа стало"
+                      >
+                        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                          <path d="M9 6 3 12l6 6M15 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div class="notes">
+                      <div class="note was"><div class="label">Было</div><p set:html={p.old.note} /></div>
+                      <div class="note now"><div class="label">Стало</div><p set:html={p.now.note} /></div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          }
+        </div>
+      </section>
+
+      <section class="wrap" aria-labelledby="fix-h">
+        <div class="sec-head">
+          <div class="eyebrow">Проблемы и исправления</div>
+          <h2 id="fix-h">Что мешало старому сайту и что сделано</h2>
+          <p>Порядок — по тому, насколько сильно проблема мешала получать заявки.</p>
+        </div>
+        {
+          compare.groups.map((g) => (
+            <div class="group">
+              <h3>{g.title}</h3>
+              {g.rows.map((r) => (
+                <div class="row">
+                  {(['was', 'now'] as const).map((side) => {
+                    const s = r[side];
+                    return (
+                      <div class:list={['side', side]}>
+                        <div class="label">{side === 'was' ? 'Было' : 'Стало'}</div>
+                        <h4>{s.title}</h4>
+                        {s.text && <p set:html={s.text} />}
+                        {s.items && (
+                          <ul>
+                            {s.items.map((i) => (
+                              <li set:html={i} />
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          ))
+        }
+      </section>
+
+      {
+        compare.todo.length > 0 && (
+          <section class="wrap" aria-labelledby="todo-h">
+            <div class="todo">
+              <h2 id="todo-h">Что нужно от вас до запуска</h2>
+              <p>На демо эти места отмечены плашками «нужно от вас».</p>
+              <ul>
+                {compare.todo.map((t) => (
+                  <li>{t}</li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        )
+      }
+    </main>
+
+    <footer class="wrap">{compare.footer}</footer>
+
+    <script>
+      // Слайдер «было / стало»: мышь, палец, клавиатура. Слева было, справа стало.
+      for (const ba of document.querySelectorAll<HTMLElement>('[data-ba]')) {
+        const handle = ba.querySelector<HTMLElement>('.ba-handle')!;
+        let pos = 50;
+        let dragging = false;
+
+        const set = (value: number) => {
+          pos = Math.max(0, Math.min(100, value));
+          const v = Math.round(pos);
+          ba.style.setProperty('--pos', `${pos}%`);
+          handle.setAttribute('aria-valuenow', String(v));
+          handle.setAttribute('aria-valuetext', `Было ${v}% кадра, стало ${100 - v}%`);
+          ba.toggleAttribute('data-hide-was', pos < 14);
+          ba.toggleAttribute('data-hide-now', pos > 86);
+        };
+        const fromX = (clientX: number) => {
+          const r = ba.getBoundingClientRect();
+          set(((clientX - r.left) / r.width) * 100);
+        };
+        const end = (e: PointerEvent) => {
+          dragging = false;
+          ba.removeAttribute('data-dragging');
+          if (ba.hasPointerCapture(e.pointerId)) ba.releasePointerCapture(e.pointerId);
+        };
+
+        ba.addEventListener('pointerdown', (e) => {
+          if (e.button !== 0) return;
+          ba.setPointerCapture(e.pointerId);
+          dragging = true;
+          ba.setAttribute('data-dragging', '');
+          // Пальцем разделитель едет только за движением: касание в начале прокрутки его не дёргает
+          if (e.pointerType === 'mouse') fromX(e.clientX);
+        });
+        ba.addEventListener('pointermove', (e) => {
+          if (dragging) fromX(e.clientX);
+        });
+        ba.addEventListener('pointerup', end);
+        ba.addEventListener('pointercancel', end);
+
+        handle.addEventListener('keydown', (e) => {
+          const step = e.shiftKey ? 10 : 4;
+          if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') set(pos - step);
+          else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') set(pos + step);
+          else if (e.key === 'Home') set(0);
+          else if (e.key === 'End') set(100);
+          else return;
+          e.preventDefault();
+        });
+      }
+    </script>
+  </body>
+</html>

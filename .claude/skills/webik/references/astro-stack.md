@@ -42,8 +42,19 @@ export default defineConfig({
   trailingSlash: 'always',
   build: { format: 'directory' },
   integrations: [sitemap()],
-  vite: { plugins: [tailwindcss()] },
+  vite: {
+    plugins: [tailwindcss()],
+    // Константа сборки: в боевой сборке код демо-страницы «было / стало» и её скриншоты вырезаются целиком
+    define: { __WEBIK_DEMO__: JSON.stringify(isDemo) },
+  },
 });
+```
+
+`src/env.d.ts`:
+
+```ts
+/** true только в демо-сборке (npm run build:demo), см. astro.config.mjs */
+declare const __WEBIK_DEMO__: boolean;
 ```
 
 `tsconfig.json`:
@@ -53,6 +64,43 @@ export default defineConfig({
 ```
 
 `.gitignore`: `node_modules/`, `dist/`, `.astro/`, `.env`, `.webik/source/`.
+
+## Демо и боевая сборка
+
+Одна кодовая база, две сборки: `npm run build` (прод) и `npm run build:demo` (`WEBIK_ENV=demo`). В демо:
+- `noindex` на всех страницах, `robots.txt` с `Disallow: /`, без счётчиков, форма не отправляет данные;
+- корень `/` — страница «было / стало» для клиента (`references/compare.md`), главная сайта — `/glavnaya/`.
+
+```ts
+// src/data/site.ts
+/** На демо корень домена занимает страница «было / стало», главная сайта живёт на /glavnaya/ */
+export const isDemo = process.env.WEBIK_ENV === 'demo';
+export const homeHref = isDemo ? '/glavnaya/' : '/';
+```
+
+```astro
+---
+// src/pages/index.astro — прод: главная сайта; демо: страница «было / стало»
+import HomePage from '../components/sections/HomePage.astro';
+// В боевой сборке ветка вырезается, и скриншоты сравнения не попадают в dist/
+const Comparison = __WEBIK_DEMO__ ? (await import('../components/demo/Comparison.astro')).default : null;
+---
+{Comparison ? <Comparison /> : <HomePage />}
+```
+
+```astro
+---
+// src/pages/glavnaya/[...rest].astro — главная сайта на демо; в боевой сборке страниц нет
+import HomePage from '../../components/sections/HomePage.astro';
+import { isDemo } from '../../data/site';
+export function getStaticPaths() {
+  return isDemo ? [{ params: { rest: undefined } }] : [];
+}
+---
+<HomePage />
+```
+
+Главная сайта целиком живёт в компоненте `HomePage.astro`, страницы только выбирают, где её показать. Все ссылки «на главную» (логотип, хлебные крошки, 404, «Главная» в меню) — через `homeHref`, не `href="/"`. Канонический адрес главной на демо значения не имеет: демо закрыто от индексации.
 
 ## Структура
 
@@ -135,6 +183,7 @@ Tailwind v4, настройка в CSS:
 - Сначала нативное: `<details>` для FAQ, `<dialog>` для модалок и лайтбокса, `<a href="tel:">`, `<a href="mailto:">`.
 - Фреймворк-острова (React/Preact) — только если без них никак (сложный калькулятор, фильтры каталога). Тогда `npx astro add preact` и `client:visible`.
 - Иконки — inline SVG-компоненты; никаких иконочных шрифтов.
+- **Иконки мессенджеров — только официальные знаки из плагина**: `templates/icons/telegram.svg`, `whatsapp.svg`, `max.svg`. Не рисуй их сам и не бери из наборов иконок. Скопируй в `src/assets/icons/` и выводи картинкой (`<img>` или `<Image>` из `astro:assets`) с `alt` по названию («Telegram»), размер 24–32px в кнопках, 40–48px в отдельных бейджах. Inline не вставлять: у `max.svg` внутри фильтры и градиенты с id, при нескольких копиях на странице они конфликтуют. Ссылки: `https://t.me/<ник>`, `https://wa.me/<номер без +>`, Max — ссылка из профиля клиента; номера и ники — только реальные из `src/data/site.ts`. Если дизайн требует одноцветные знаки (монохром в цвет текста), используй тот же контур через `mask-image: url(...)` с `background-color: currentColor`, а не перерисовку.
 - Карты (Яндекс/Google) — iframe с `loading="lazy"` или статичная картинка со ссылкой; не грузить JS карты на каждой странице.
 
 ## Изображения
