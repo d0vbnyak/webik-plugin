@@ -50,8 +50,6 @@
 
 Перезапустите Claude Code. Команды будут доступны как `/webik:audit`, `/webik:design` и т. д. В Claude Code 2.1.275 и новее можно одной строкой: `/plugin install webik --marketplace d0vbnyak/webik-plugin`.
 
-Репозиторий приватный: у сотрудника должен быть доступ к нему на GitHub (`gh auth login` или git-учётка).
-
 Обновление у сотрудников: `/plugin marketplace update webik`. Новая версия подхватывается, только если в манифесте изменилось поле `version`; хук `.githooks/pre-commit` меняет его при каждом коммите. Включается один раз в клоне репозитория: `git config core.hooksPath .githooks`.
 
 ### Что нужно на машине сотрудника
@@ -63,7 +61,7 @@
 - вход в claude.ai в Claude Code: без него недоступен артефакт Claude Design;
 - **Context7** — подключается вместе с плагином (`.mcp.json`), отдельно ставить не нужно. Проверка: `/mcp` → `context7` в статусе connected. Если сервер не подключился: `claude mcp add --transport http context7 https://mcp.context7.com/mcp`. Без ключа лимиты запросов ниже; бесплатный ключ берётся на context7.com;
 - конфиг демо-сервера `~/.webik/config.json` — пример в `references/deploy.md` скилла, раздел «Конфиг демо-сервера»;
-- доступ к исходникам webik.tech (`gh auth login` с доступом к приватному репозиторию `d0vbnyak/webik`) — из них переносятся возможности для сайтов клиентов.
+- исходники [webik.tech](https://github.com/d0vbnyak/webik) — из них переносятся возможности для сайтов клиентов.
 
 ### Демо-сервер
 
